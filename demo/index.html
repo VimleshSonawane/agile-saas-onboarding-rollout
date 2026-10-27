@@ -3,45 +3,138 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Onboarding Demo — Project</title>
+<title>Agile Board Demo — SaaS Onboarding Rollout</title>
 <style>
-body{font-family:system-ui,Arial,sans-serif;max-width:720px;margin:40px auto;padding:0 20px;color:#222}
-h1{font-size:28px} .muted{color:#666}
-.step{border:1px solid #ddd;border-radius:10px;padding:14px;margin:12px 0}
+body{font-family:system-ui,Arial,sans-serif;max-width:1080px;margin:32px auto;padding:0 20px;color:#222;line-height:1.5}
+h1{font-size:30px;margin-bottom:4px} h2{font-size:20px;margin-top:28px} .muted{color:#666}
 button{padding:8px 14px;border-radius:8px;border:1px solid #222;background:#fff;cursor:pointer}
-#bar{height:12px;background:#eee;border-radius:999px;overflow:hidden}
+button.active{background:#222;color:#fff}
+button.small{padding:4px 10px;font-size:13px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+.col{border:1px solid #ddd;border-radius:10px;padding:10px;min-height:180px;background:#fafafa}
+.col h3{margin:0 0 8px;font-size:15px}
+.card{border:1px solid #ddd;border-radius:10px;padding:10px;margin:8px 0;background:#fff}
+.card strong{display:block} .tag{font-size:12px;color:#555}
+#bar{height:12px;background:#eee;border-radius:999px;overflow:hidden;margin:8px 0}
 #fill{height:100%;width:0;background:#222;transition:width .3s}
+.burn{display:flex;align-items:flex-end;gap:6px;height:90px;border-bottom:1px solid #ccc;padding:6px 0;margin-top:8px}
+.burn div{flex:1;background:#222;border-radius:4px 4px 0 0;min-height:4px}
+.burn div span{display:block;text-align:center;font-size:11px;margin-top:-18px}
+.backlog{border:1px solid #ddd;border-radius:10px;padding:12px;margin:10px 0}
+@media(max-width:800px){.board{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
-<h1>Partner / Client Onboarding — Demo</h1>
-<p class="muted">Project demo, created by Vimlesh Sonawane. Simulated scenario, not a production system. Tick steps to see progress, owners, and next actions.</p>
+<h1>Agile Board Demo — SaaS Onboarding Rollout</h1>
+<p class="muted">Simulated project by Vimlesh Sonawane, Project Manager. Not a production system, no real customer data. Timeline in the project: 6 weeks, 3 two-week sprints. Target in the simulation: onboarding from 21 days to 10 days — a target, not a real company result. Story points here are for demo illustration, not a real team's velocity.</p>
+
+<h2>How to try it</h2>
+<ol>
+<li>Pick a sprint below. Read its goal.</li>
+<li>Click <strong>Move forward</strong> on a story card to move it To Do → In Progress → In Review → Done.</li>
+<li>Watch sprint progress and remaining work fall as stories reach Done.</li>
+<li>Use <strong>Reset sprint</strong> to run it again. The Backlog tab shows every story, its epic, points, acceptance criteria, and planned sprint.</li>
+</ol>
+
+<div class="tabs" id="tabs"></div>
+
+<div id="sprintView">
+<h2 id="sprintTitle"></h2>
+<p id="sprintGoal" class="muted"></p>
+<p id="sprintStats"></p>
 <div id="bar"><div id="fill"></div></div>
-<p id="progress">Progress: 0 of 6 steps complete</p>
-<div id="steps"></div>
-<p class="muted">Significance: this demo shows the guided flow analysed in the project — one progress view, clear owners, and a training handoff gate.</p>
+<p id="progressText"></p>
+<button class="small" onclick="resetSprint()">Reset sprint</button>
+<div class="board" id="board"></div>
+<h2>Remaining work</h2>
+<p class="muted">Points left as stories move to Done. Start = sprint total. Each Done story drops the line.</p>
+<div class="burn" id="burn"></div>
+<p id="burnText" class="muted"></p>
+</div>
+
+<div id="backlogView" style="display:none">
+<h2>Product Backlog</h2>
+<p class="muted">From docs/backlog.md. Stories are small enough for one sprint, with acceptance criteria. Future backlog, not in Sprint 1–3: additional import formats, automated reminders, deeper reporting.</p>
+<div id="backlogList"></div>
+</div>
+
+<p class="muted">What this shows: backlog refinement, sprint planning with a goal and a point total, a Jira-style board, tracking by remaining work, and the trade-off when a story is not finished — it stays out of Done and out of the sprint's completed points. Sprint review and retrospective notes are in docs/sprint-plans.md and docs/retrospective.md.</p>
+
 <script>
-const steps=[
- ["Account setup","Internal team","Create account and confirm partner type"],
- ["Kickoff and scope","Customer + Internal","Confirm scope, stages, and go-live target"],
- ["Security and compliance check","Security / Legal","Complete review before pilot go-live"],
- ["Data import — common format","Customer","Import core data and review the error summary"],
- ["Training","Customer Success","Complete stage training notes"],
- ["Go-live readiness","Internal team","Confirm handoff checklist, then mark ready for go-live"]
+const COLS=["To Do","In Progress","In Review","Done"];
+const SPRINTS=[
+{id:1,name:"Sprint 1 — Discovery and setup",goal:"Goal: Define the problem, stakeholders, and a usable backlog, and set up tracking before building.",capacity:8,stories:[
+{id:"1.1",epic:"Epic 1 — Account setup",title:"As a new partner/customer, I can create an account and see my onboarding stages, so I know what is next.",points:5,accept:"Stages, owners, and status are visible in one view; incomplete stages are clearly marked."},
+{id:"1.2",epic:"Epic 1 — Account setup",title:"As an internal user, I can assign an owner to each stage, so accountability is visible.",points:3,accept:"Every stage has one named owner role; unassigned stages are flagged."}
+]},
+{id:2,name:"Sprint 2 — Core build",goal:"Goal: Build the guided checklist, account setup view, and basic data import.",capacity:19,stories:[
+{id:"2.1",epic:"Epic 2 — Guided onboarding checklist",title:"As a new customer, I can follow a guided checklist in order, so I do not miss a required step.",points:8,accept:"Checklist order is enforced for required steps; progress updates as steps are completed."},
+{id:"2.2",epic:"Epic 2 — Guided onboarding checklist",title:"As a customer, I can see what is required from me versus what the internal team will do.",points:3,accept:"Each step is labelled customer action or internal action."},
+{id:"3.1",epic:"Epic 3 — Data import",title:"As a customer, I can import my core data using the most common format, so setup does not start from a blank sheet.",points:8,accept:"A sample import completes with a clear success/error summary."}
+]},
+{id:3,name:"Sprint 3 — Pilot, training, and go-live",goal:"Goal: Test the flow with a simulated pilot, fix the highest-impact issues, and prepare a go-live playbook.",capacity:21,stories:[
+{id:"3.2",epic:"Epic 3 — Data import",title:"As an internal user, I can see import errors in plain language, so I can help without engineering help for common cases.",points:5,accept:"Common errors show a fix suggestion, not only a code."},
+{id:"4.1",epic:"Epic 4 — Training and handoff",title:"As a customer, I can access short training materials linked to each stage, so I do not need a separate training call for basics.",points:5,accept:"Each major stage links to at least one training note or walkthrough."},
+{id:"4.2",epic:"Epic 4 — Training and handoff",title:"As a Customer Success user, I can confirm handoff only when the completion checklist is met.",points:3,accept:"Handoff is blocked until required items are marked complete."},
+{id:"5.1",epic:"Epic 5 — Reporting and pilot feedback",title:"As a project manager, I can see onboarding progress, blockers, and time in stage, so I can act early on delays.",points:5,accept:"Progress, blocker, and time-in-stage are visible for the pilot group."},
+{id:"5.2",epic:"Epic 5 — Reporting and pilot feedback",title:"As a pilot customer, I can give feedback on clarity and blockers, so the flow can be improved before full rollout.",points:3,accept:"Feedback is collected per stage and reviewed in the sprint retrospective."}
+]}
 ];
-const el=document.getElementById('steps');
-steps.forEach((s,i)=>{
- const d=document.createElement('div'); d.className='step';
- d.innerHTML=`<label><input type="checkbox" data-i="${i}"> <strong>${s[0]}</strong></label><p>Owner: ${s[1]}<br>${s[2]}</p>`;
- el.appendChild(d);
-});
-function update(){
- const boxes=[...document.querySelectorAll('input[type=checkbox]')];
- const done=boxes.filter(b=>b.checked).length;
- document.getElementById('fill').style.width=(done/boxes.length*100)+'%';
- document.getElementById('progress').textContent=`Progress: ${done} of ${boxes.length} steps complete`;
+let current=2;
+let state={};
+function initState(){ state={}; SPRINTS.forEach(s=>{ state[s.id]={}; s.stories.forEach(st=>{ state[s.id][st.id]=0; }); }); }
+initState();
+function renderTabs(){
+ const t=document.getElementById('tabs'); t.innerHTML='';
+ SPRINTS.forEach(s=>{ const b=document.createElement('button'); b.textContent=s.name; if(s.id===current) b.className='active'; b.onclick=()=>{current=s.id; showSprint(); renderTabs();}; t.appendChild(b); });
+ const b=document.createElement('button'); b.textContent='Product Backlog'; b.onclick=()=>{showBacklog();}; t.appendChild(b);
 }
-document.querySelectorAll('input[type=checkbox]').forEach(b=>b.addEventListener('change',update));
+function showSprint(){
+ document.getElementById('sprintView').style.display='block';
+ document.getElementById('backlogView').style.display='none';
+ renderTabs(); renderBoard();
+}
+function showBacklog(){
+ document.getElementById('sprintView').style.display='none';
+ document.getElementById('backlogView').style.display='block';
+ renderTabs();
+ const list=document.getElementById('backlogList'); list.innerHTML='';
+ SPRINTS.forEach(s=>{ s.stories.forEach(st=>{ const d=document.createElement('div'); d.className='backlog'; d.innerHTML=`<strong>${st.id} — ${st.epic}</strong><br>${st.title}<br><span class="tag">${st.points} points · Planned: ${s.name} · Acceptance: ${st.accept}</span>`; list.appendChild(d); }); });
+}
+function total(s){ return s.stories.reduce((a,st)=>a+st.points,0); }
+function donePoints(s){ return s.stories.filter(st=>state[s.id][st.id]===3).reduce((a,st)=>a+st.points,0); }
+function renderBoard(){
+ const s=SPRINTS.find(x=>x.id===current);
+ document.getElementById('sprintTitle').textContent=s.name;
+ document.getElementById('sprintGoal').textContent=s.goal;
+ const done=donePoints(s), tot=total(s);
+ document.getElementById('sprintStats').textContent=`Sprint total: ${tot} points · Completed: ${done} points · Remaining: ${tot-done} points`;
+ document.getElementById('fill').style.width=(tot?done/tot*100:0)+'%';
+ document.getElementById('progressText').textContent=`Progress: ${done} of ${tot} points done`;
+ const board=document.getElementById('board'); board.innerHTML='';
+ COLS.forEach((col,ci)=>{
+  const c=document.createElement('div'); c.className='col'; c.innerHTML=`<h3>${col}</h3>`;
+  s.stories.filter(st=>state[s.id][st.id]===ci).forEach(st=>{
+   const card=document.createElement('div'); card.className='card';
+   card.innerHTML=`<span class="tag">${st.id} · ${st.epic} · ${st.points} points</span><strong>${st.title}</strong><p>${st.accept}</p>`;
+   const btn=document.createElement('button'); btn.className='small';
+   btn.textContent= ci<3 ? 'Move forward →' : 'Done ✓ — move back';
+   btn.onclick=()=>{ state[s.id][st.id]= ci<3 ? ci+1 : 0; renderBoard(); };
+   card.appendChild(btn); c.appendChild(card);
+  });
+  board.appendChild(c);
+ });
+ const burn=document.getElementById('burn'); burn.innerHTML='';
+ const remaining=[tot];
+ let rem=tot;
+ s.stories.forEach(st=>{ if(state[s.id][st.id]===3) rem-=st.points; remaining.push(rem); });
+ const max=tot||1;
+ remaining.forEach(v=>{ const d=document.createElement('div'); d.style.height=(v/max*100)+'%'; d.innerHTML=`<span>${v}</span>`; burn.appendChild(d); });
+ document.getElementById('burnText').textContent=`Remaining work now: ${tot-done} points. Burndown starts at ${tot} and falls only when a story reaches Done.`;
+}
+function resetSprint(){ SPRINTS.find(x=>x.id===current).stories.forEach(st=>{ state[current][st.id]=0; }); renderBoard(); }
+renderTabs(); showSprint();
 </script>
 </body>
 </html>
