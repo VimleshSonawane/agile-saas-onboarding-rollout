@@ -35,12 +35,7 @@ input,select{padding:8px;border-radius:8px;border:1px solid #aaa}
 <h1>Agile Board Demo — SaaS Onboarding Rollout</h1>
 <p class="muted">Simulated project by Vimlesh Sonawane, Project Manager. Not a production system, no real customer data. Timeline in the project: 6 weeks, 3 two-week sprints. Target in the simulation: onboarding from 21 days to 10 days — a target, not a real company result. Story points here are for demo illustration, not a real team's velocity.</p>
 
-<h2>1. Pick a role — blend it into your resume</h2>
-<p class="muted">Same project, different angle. Pick the role you are applying for and the panel below changes what it highlights and which resume bullets it suggests. Use these only under the label “Portfolio Project — Agile SaaS Onboarding Rollout (Self-initiated project)”, and use job-description keywords only where they genuinely apply.</p>
-<div class="tabs" id="roleTabs"></div>
-<div class="panel" id="rolePanel"></div>
-
-<h2>2. Sprint board — try it</h2>
+<h2>1. Sprint board — try it</h2>
 <p class="muted">Pick a sprint, read its goal, click <strong>Move forward</strong> on a story to move it To Do → In Progress → In Review → Done. Points and remaining work change only when a story reaches Done. Use <strong>Reset sprint</strong> to run it again.</p>
 <div class="tabs" id="tabs"></div>
 <div id="sprintView">
@@ -64,7 +59,7 @@ input,select{padding:8px;border-radius:8px;border:1px solid #aaa}
 <label>Filter by epic: <select id="epicFilter" onchange="renderBacklog()"><option value="All">All epics</option><option>Epic 1 — Account setup</option><option>Epic 2 — Guided onboarding checklist</option><option>Epic 3 — Data import</option><option>Epic 4 — Training and handoff</option><option>Epic 5 — Reporting and pilot feedback</option><option>Custom</option></select></label>
 <div id="backlogList"></div>
 <h2>Add your own story</h2>
-<p class="muted">Use this to blend in a point you want for a specific role — for example, a stakeholder, reporting, or process story. It is added to the backlog in this browser session only, it is not saved to the repo.</p>
+<p class="muted">Try backlog refinement: add a story for a stakeholder, reporting, or process need. It is added to the backlog in this browser session only, it is not saved to the repo.</p>
 <input id="newTitle" placeholder="As a … , I want … , so that …" style="width:100%;margin:6px 0">
 <select id="newEpic"><option>Epic 1 — Account setup</option><option>Epic 2 — Guided onboarding checklist</option><option>Epic 3 — Data import</option><option>Epic 4 — Training and handoff</option><option>Epic 5 — Reporting and pilot feedback</option></select>
 <select id="newPoints"><option value="3">3 points</option><option value="5">5 points</option><option value="8">8 points</option></select>
@@ -72,7 +67,7 @@ input,select{padding:8px;border-radius:8px;border:1px solid #aaa}
 <p id="addMsg" class="muted"></p>
 </div>
 
-<h2>3. Risks, blockers, and roadmap</h2>
+<h2>2. Risks, blockers, and roadmap</h2>
 <div class="panel">
 <h3>Risks and blockers — from docs/raid-log.md</h3>
 <p>Click a risk to see its mitigation. These are the trade-offs a hiring manager can ask about in an interview.</p>
@@ -83,12 +78,6 @@ input,select{padding:8px;border-radius:8px;border:1px solid #aaa}
 <div><strong>Sprint 2 — Weeks 3–4</strong><br>Core build<br>Milestone: Core flow walkthrough; two usability issues logged for Sprint 3.</div>
 <div><strong>Sprint 3 — Weeks 5–6</strong><br>Pilot, training, go-live<br>Milestone: Go-live readiness review against charter success criteria.</div>
 </div>
-
-<h2>4. Resume bullets for the selected role</h2>
-<p class="muted">Copy these, then edit them to the job description. Do not add employers, team sizes, budgets, or results that are not in the repo, and do not present simulation targets as real company results.</p>
-<ul id="bullets"></ul>
-<button onclick="copyBullets()">Copy bullets</button>
-<p id="copyMsg" class="muted"></p>
 
 <p class="muted">What this shows: backlog refinement, sprint planning with a goal and a point total, a Jira-style board, tracking by remaining work, risk and dependency management, and the trade-off when a story is not finished — it stays out of Done and out of the sprint's completed points. Sprint review and retrospective notes are in docs/sprint-plans.md and docs/retrospective.md.</p>
 
@@ -112,58 +101,16 @@ const SPRINTS=[
 {id:"5.2",epic:"Epic 5 — Reporting and pilot feedback",title:"As a pilot customer, I can give feedback on clarity and blockers, so the flow can be improved before full rollout.",points:3,accept:"Feedback is collected per stage and reviewed in the sprint retrospective."}
 ]}
 ];
-const ROLES=[
-{name:"Agile Project Manager",focus:"Focus: sprint planning, scope control, and delivery tracking across 3 two-week sprints.",bullets:[
-"Created a self-initiated Agile SaaS onboarding rollout across 3 two-week sprints, with charter, backlog, sprint goals, reviews, and retrospective.",
-"Analysed a manual 21-day onboarding process in the simulated scenario and identified bottlenecks in ownership, checklist clarity, late security review, and progress visibility.",
-"Designed a guided onboarding flow with a 10-day pilot target, stage owners, completion criteria, and a single progress view.",
-"Used Jira-style backlog and sprint tracking to manage scope, with a change log and weekly scope decisions to control mid-sprint scope growth."
-]},
-{name:"Product Manager / Delivery Manager",focus:"Focus: backlog, user stories, acceptance criteria, and what was built first and why.",bullets:[
-"Created a product backlog of 10 user stories across 5 epics, each with acceptance criteria, and refined them to fit one sprint each.",
-"Designed a guided checklist flow, account setup view, and basic data import for the most common format first, phasing other formats later.",
-"Analysed simulated pilot feedback and redesigned two flow steps that caused drop-off, moving the security check earlier.",
-"Created training materials linked to each stage and a handoff checklist blocked until completion criteria were met."
-]},
-{name:"Program Manager",focus:"Focus: stakeholders, dependencies, risks, and go-live readiness across teams.",bullets:[
-"Created a 6-week, 3-sprint rollout plan coordinating sponsor, product, engineering, Customer Success, sales/partnerships, and Security/Legal stakeholders.",
-"Analysed dependencies: security review depending on Sprint 1 involvement, training handoff depending on checklist completion, and go-live depending on pilot feedback and retrospective.",
-"Created a RAID log with early mitigations for integration delays, scope growth, security review delays, and incomplete training.",
-"Designed a go-live playbook and readiness review against charter success criteria, with open items for a future iteration."
-]},
-{name:"Operations & Process Improvement Manager",focus:"Focus: process analysis, standardisation, and measurable improvement in the simulated pilot.",bullets:[
-"Analysed a manual, email-dependent onboarding process in the simulated scenario, mapping stages, owners, and delays that stretched it to 21 days.",
-"Designed a standardised guided flow with clear customer vs. internal actions, stage owners, and a single progress view to replace scattered checklists.",
-"Created a dashboard-style view for progress, blockers, and time in stage for the pilot group, to act early on delays.",
-"Analysed pilot feedback on clarity and blockers and redesigned two steps, with a retrospective on what worked and what to change next."
-]}
-];
 const RAIDS=[
 ["Integration work runs late","Start with the most common import format first; phase other formats to a future backlog."],
 ["Scope grows mid-sprint from Sales/Partnerships requests","Change log, weekly scope decision with the sponsor, and a clear out-of-scope list in the charter."],
 ["Security/compliance review delays launch","Involve Security/Legal in Sprint 1; complete review before pilot go-live."],
 ["Pilot customers do not complete training","Training linked to each stage, plus a completion checklist before handoff."]
 ];
-let current=2, roleIdx=0, custom=[];
+let current=2, custom=[];
 let state={};
 function initState(){ state={}; SPRINTS.forEach(s=>{ state[s.id]={}; s.stories.forEach(st=>{ state[s.id][st.id]=0; }); }); }
 initState();
-function renderRoleTabs(){
- const t=document.getElementById('roleTabs'); t.innerHTML='';
- ROLES.forEach((r,i)=>{ const b=document.createElement('button'); b.textContent=r.name; if(i===roleIdx) b.className='active'; b.onclick=()=>{roleIdx=i; renderRole();}; t.appendChild(b); });
-}
-function renderRole(){
- renderRoleTabs();
- document.getElementById('rolePanel').innerHTML=`<strong>${ROLES[roleIdx].name}</strong><br>${ROLES[roleIdx].focus}`;
- const ul=document.getElementById('bullets'); ul.innerHTML='';
- ROLES[roleIdx].bullets.forEach(b=>{ const li=document.createElement('li'); li.textContent=b; ul.appendChild(li); });
- document.getElementById('copyMsg').textContent='';
-}
-function copyBullets(){
- const text=ROLES[roleIdx].bullets.map(b=>'• '+b).join('\n');
- if(navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>{document.getElementById('copyMsg').textContent='Copied. Paste into your resume under the Portfolio Project label, then edit to the job description.';}); }
- else { document.getElementById('copyMsg').textContent=text; }
-}
 function renderTabs(){
  const t=document.getElementById('tabs'); t.innerHTML='';
  SPRINTS.forEach(s=>{ const b=document.createElement('button'); b.textContent=s.name; if(s.id===current) b.className='active'; b.onclick=()=>{current=s.id; showSprint();}; t.appendChild(b); });
@@ -242,7 +189,7 @@ function renderRaid(){
  const p=document.createElement('p'); p.id='raidDetail'; p.className='muted'; p.textContent='Click a risk to see its mitigation.';
  r.appendChild(p);
 }
-renderRole(); renderTabs(); showSprint(); renderRaid();
+renderTabs(); showSprint(); renderRaid();
 </script>
 </body>
 </html>

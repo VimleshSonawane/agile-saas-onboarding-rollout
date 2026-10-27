@@ -12,7 +12,7 @@ I created a complete, end-to-end onboarding rollout plan for a B2B partner/clien
 - A product backlog with epics, user stories, and acceptance criteria
 - Sprint plans for Sprint 1, 2, and 3, with goals, scope, and review points
 - A RAID log (risks, assumptions, issues, dependencies) with mitigations
-- A working demo in `demo/index.html`: a versatile interactive Agile board — product backlog, Sprint 1–3 boards, sprint goals and point totals, remaining-work tracking, RAID risks, roadmap, custom-story adding, and role presets (Agile Project Manager, Product/Delivery Manager, Program Manager, Operations & Process Improvement Manager) with copyable resume bullets for each role
+- A working demo in `demo/index.html`: an interactive Agile board — product backlog, Sprint 1–3 boards, sprint goals and point totals, remaining-work tracking, RAID risks, roadmap, and custom-story adding
 - A retrospective and a set of honest resume bullets in `docs/resume-bullets.md`
 
 ## What I analysed
