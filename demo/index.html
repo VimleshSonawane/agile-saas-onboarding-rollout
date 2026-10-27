@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Onboarding Demo — Project</title>
+<style>
+body{font-family:system-ui,Arial,sans-serif;max-width:720px;margin:40px auto;padding:0 20px;color:#222}
+h1{font-size:28px} .muted{color:#666}
+.step{border:1px solid #ddd;border-radius:10px;padding:14px;margin:12px 0}
+button{padding:8px 14px;border-radius:8px;border:1px solid #222;background:#fff;cursor:pointer}
+#bar{height:12px;background:#eee;border-radius:999px;overflow:hidden}
+#fill{height:100%;width:0;background:#222;transition:width .3s}
+</style>
+</head>
+<body>
+<h1>Partner / Client Onboarding — Demo</h1>
+<p class="muted">Project demo, created by Vimlesh Sonawane. Simulated scenario, not a production system. Tick steps to see progress, owners, and next actions.</p>
+<div id="bar"><div id="fill"></div></div>
+<p id="progress">Progress: 0 of 6 steps complete</p>
+<div id="steps"></div>
+<p class="muted">Significance: this demo shows the guided flow analysed in the project — one progress view, clear owners, and a training handoff gate.</p>
+<script>
+const steps=[
+ ["Account setup","Internal team","Create account and confirm partner type"],
+ ["Kickoff and scope","Customer + Internal","Confirm scope, stages, and go-live target"],
+ ["Security and compliance check","Security / Legal","Complete review before pilot go-live"],
+ ["Data import — common format","Customer","Import core data and review the error summary"],
+ ["Training","Customer Success","Complete stage training notes"],
+ ["Go-live readiness","Internal team","Confirm handoff checklist, then mark ready for go-live"]
+];
+const el=document.getElementById('steps');
+steps.forEach((s,i)=>{
+ const d=document.createElement('div'); d.className='step';
+ d.innerHTML=`<label><input type="checkbox" data-i="${i}"> <strong>${s[0]}</strong></label><p>Owner: ${s[1]}<br>${s[2]}</p>`;
+ el.appendChild(d);
+});
+function update(){
+ const boxes=[...document.querySelectorAll('input[type=checkbox]')];
+ const done=boxes.filter(b=>b.checked).length;
+ document.getElementById('fill').style.width=(done/boxes.length*100)+'%';
+ document.getElementById('progress').textContent=`Progress: ${done} of ${boxes.length} steps complete`;
+}
+document.querySelectorAll('input[type=checkbox]').forEach(b=>b.addEventListener('change',update));
+</script>
+</body>
+</html>
