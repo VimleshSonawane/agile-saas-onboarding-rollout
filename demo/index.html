@@ -10,6 +10,7 @@ h1{font-size:30px;margin-bottom:4px} h2{font-size:20px;margin-top:28px} .muted{c
 button{padding:8px 14px;border-radius:8px;border:1px solid #222;background:#fff;cursor:pointer}
 button.active{background:#222;color:#fff}
 button.small{padding:4px 10px;font-size:13px}
+input,select{padding:8px;border-radius:8px;border:1px solid #aaa}
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
 .board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
 .col{border:1px solid #ddd;border-radius:10px;padding:10px;min-height:180px;background:#fafafa}
@@ -21,27 +22,31 @@ button.small{padding:4px 10px;font-size:13px}
 .burn{display:flex;align-items:flex-end;gap:6px;height:90px;border-bottom:1px solid #ccc;padding:6px 0;margin-top:8px}
 .burn div{flex:1;background:#222;border-radius:4px 4px 0 0;min-height:4px}
 .burn div span{display:block;text-align:center;font-size:11px;margin-top:-18px}
-.backlog{border:1px solid #ddd;border-radius:10px;padding:12px;margin:10px 0}
-@media(max-width:800px){.board{grid-template-columns:1fr 1fr}}
+.backlog,.panel{border:1px solid #ddd;border-radius:10px;padding:12px;margin:10px 0}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.metric{border:1px solid #ddd;border-radius:10px;padding:12px;text-align:center}
+.metric b{font-size:24px;display:block}
+.road{display:flex;gap:12px;flex-wrap:wrap}
+.road div{flex:1;min-width:200px;border:1px solid #ddd;border-radius:10px;padding:12px}
+@media(max-width:800px){.board{grid-template-columns:1fr 1fr}.metrics{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 <h1>Agile Board Demo — SaaS Onboarding Rollout</h1>
 <p class="muted">Simulated project by Vimlesh Sonawane, Project Manager. Not a production system, no real customer data. Timeline in the project: 6 weeks, 3 two-week sprints. Target in the simulation: onboarding from 21 days to 10 days — a target, not a real company result. Story points here are for demo illustration, not a real team's velocity.</p>
 
-<h2>How to try it</h2>
-<ol>
-<li>Pick a sprint below. Read its goal.</li>
-<li>Click <strong>Move forward</strong> on a story card to move it To Do → In Progress → In Review → Done.</li>
-<li>Watch sprint progress and remaining work fall as stories reach Done.</li>
-<li>Use <strong>Reset sprint</strong> to run it again. The Backlog tab shows every story, its epic, points, acceptance criteria, and planned sprint.</li>
-</ol>
+<h2>1. Pick a role — blend it into your resume</h2>
+<p class="muted">Same project, different angle. Pick the role you are applying for and the panel below changes what it highlights and which resume bullets it suggests. Use these only under the label “Portfolio Project — Agile SaaS Onboarding Rollout (Self-initiated project)”, and use job-description keywords only where they genuinely apply.</p>
+<div class="tabs" id="roleTabs"></div>
+<div class="panel" id="rolePanel"></div>
 
+<h2>2. Sprint board — try it</h2>
+<p class="muted">Pick a sprint, read its goal, click <strong>Move forward</strong> on a story to move it To Do → In Progress → In Review → Done. Points and remaining work change only when a story reaches Done. Use <strong>Reset sprint</strong> to run it again.</p>
 <div class="tabs" id="tabs"></div>
-
 <div id="sprintView">
 <h2 id="sprintTitle"></h2>
 <p id="sprintGoal" class="muted"></p>
+<div class="metrics" id="metrics"></div>
 <p id="sprintStats"></p>
 <div id="bar"><div id="fill"></div></div>
 <p id="progressText"></p>
@@ -55,11 +60,37 @@ button.small{padding:4px 10px;font-size:13px}
 
 <div id="backlogView" style="display:none">
 <h2>Product Backlog</h2>
-<p class="muted">From docs/backlog.md. Stories are small enough for one sprint, with acceptance criteria. Future backlog, not in Sprint 1–3: additional import formats, automated reminders, deeper reporting.</p>
+<p class="muted">From docs/backlog.md, plus any stories you add below. Future backlog, not in Sprint 1–3: additional import formats, automated reminders, deeper reporting.</p>
+<label>Filter by epic: <select id="epicFilter" onchange="renderBacklog()"><option value="All">All epics</option><option>Epic 1 — Account setup</option><option>Epic 2 — Guided onboarding checklist</option><option>Epic 3 — Data import</option><option>Epic 4 — Training and handoff</option><option>Epic 5 — Reporting and pilot feedback</option><option>Custom</option></select></label>
 <div id="backlogList"></div>
+<h2>Add your own story</h2>
+<p class="muted">Use this to blend in a point you want for a specific role — for example, a stakeholder, reporting, or process story. It is added to the backlog in this browser session only, it is not saved to the repo.</p>
+<input id="newTitle" placeholder="As a … , I want … , so that …" style="width:100%;margin:6px 0">
+<select id="newEpic"><option>Epic 1 — Account setup</option><option>Epic 2 — Guided onboarding checklist</option><option>Epic 3 — Data import</option><option>Epic 4 — Training and handoff</option><option>Epic 5 — Reporting and pilot feedback</option></select>
+<select id="newPoints"><option value="3">3 points</option><option value="5">5 points</option><option value="8">8 points</option></select>
+<button onclick="addStory()">Add to backlog</button>
+<p id="addMsg" class="muted"></p>
 </div>
 
-<p class="muted">What this shows: backlog refinement, sprint planning with a goal and a point total, a Jira-style board, tracking by remaining work, and the trade-off when a story is not finished — it stays out of Done and out of the sprint's completed points. Sprint review and retrospective notes are in docs/sprint-plans.md and docs/retrospective.md.</p>
+<h2>3. Risks, blockers, and roadmap</h2>
+<div class="panel">
+<h3>Risks and blockers — from docs/raid-log.md</h3>
+<p>Click a risk to see its mitigation. These are the trade-offs a hiring manager can ask about in an interview.</p>
+<div id="raid"></div>
+</div>
+<div class="road">
+<div><strong>Sprint 1 — Weeks 1–2</strong><br>Discovery and setup<br>Milestone: Charter and backlog reviewed; pilot profiles selected.</div>
+<div><strong>Sprint 2 — Weeks 3–4</strong><br>Core build<br>Milestone: Core flow walkthrough; two usability issues logged for Sprint 3.</div>
+<div><strong>Sprint 3 — Weeks 5–6</strong><br>Pilot, training, go-live<br>Milestone: Go-live readiness review against charter success criteria.</div>
+</div>
+
+<h2>4. Resume bullets for the selected role</h2>
+<p class="muted">Copy these, then edit them to the job description. Do not add employers, team sizes, budgets, or results that are not in the repo, and do not present simulation targets as real company results.</p>
+<ul id="bullets"></ul>
+<button onclick="copyBullets()">Copy bullets</button>
+<p id="copyMsg" class="muted"></p>
+
+<p class="muted">What this shows: backlog refinement, sprint planning with a goal and a point total, a Jira-style board, tracking by remaining work, risk and dependency management, and the trade-off when a story is not finished — it stays out of Done and out of the sprint's completed points. Sprint review and retrospective notes are in docs/sprint-plans.md and docs/retrospective.md.</p>
 
 <script>
 const COLS=["To Do","In Progress","In Review","Done"];
@@ -81,26 +112,93 @@ const SPRINTS=[
 {id:"5.2",epic:"Epic 5 — Reporting and pilot feedback",title:"As a pilot customer, I can give feedback on clarity and blockers, so the flow can be improved before full rollout.",points:3,accept:"Feedback is collected per stage and reviewed in the sprint retrospective."}
 ]}
 ];
-let current=2;
+const ROLES=[
+{name:"Agile Project Manager",focus:"Focus: sprint planning, scope control, and delivery tracking across 3 two-week sprints.",bullets:[
+"Created a self-initiated Agile SaaS onboarding rollout across 3 two-week sprints, with charter, backlog, sprint goals, reviews, and retrospective.",
+"Analysed a manual 21-day onboarding process in the simulated scenario and identified bottlenecks in ownership, checklist clarity, late security review, and progress visibility.",
+"Designed a guided onboarding flow with a 10-day pilot target, stage owners, completion criteria, and a single progress view.",
+"Used Jira-style backlog and sprint tracking to manage scope, with a change log and weekly scope decisions to control mid-sprint scope growth."
+]},
+{name:"Product Manager / Delivery Manager",focus:"Focus: backlog, user stories, acceptance criteria, and what was built first and why.",bullets:[
+"Created a product backlog of 10 user stories across 5 epics, each with acceptance criteria, and refined them to fit one sprint each.",
+"Designed a guided checklist flow, account setup view, and basic data import for the most common format first, phasing other formats later.",
+"Analysed simulated pilot feedback and redesigned two flow steps that caused drop-off, moving the security check earlier.",
+"Created training materials linked to each stage and a handoff checklist blocked until completion criteria were met."
+]},
+{name:"Program Manager",focus:"Focus: stakeholders, dependencies, risks, and go-live readiness across teams.",bullets:[
+"Created a 6-week, 3-sprint rollout plan coordinating sponsor, product, engineering, Customer Success, sales/partnerships, and Security/Legal stakeholders.",
+"Analysed dependencies: security review depending on Sprint 1 involvement, training handoff depending on checklist completion, and go-live depending on pilot feedback and retrospective.",
+"Created a RAID log with early mitigations for integration delays, scope growth, security review delays, and incomplete training.",
+"Designed a go-live playbook and readiness review against charter success criteria, with open items for a future iteration."
+]},
+{name:"Operations & Process Improvement Manager",focus:"Focus: process analysis, standardisation, and measurable improvement in the simulated pilot.",bullets:[
+"Analysed a manual, email-dependent onboarding process in the simulated scenario, mapping stages, owners, and delays that stretched it to 21 days.",
+"Designed a standardised guided flow with clear customer vs. internal actions, stage owners, and a single progress view to replace scattered checklists.",
+"Created a dashboard-style view for progress, blockers, and time in stage for the pilot group, to act early on delays.",
+"Analysed pilot feedback on clarity and blockers and redesigned two steps, with a retrospective on what worked and what to change next."
+]}
+];
+const RAIDS=[
+["Integration work runs late","Start with the most common import format first; phase other formats to a future backlog."],
+["Scope grows mid-sprint from Sales/Partnerships requests","Change log, weekly scope decision with the sponsor, and a clear out-of-scope list in the charter."],
+["Security/compliance review delays launch","Involve Security/Legal in Sprint 1; complete review before pilot go-live."],
+["Pilot customers do not complete training","Training linked to each stage, plus a completion checklist before handoff."]
+];
+let current=2, roleIdx=0, custom=[];
 let state={};
 function initState(){ state={}; SPRINTS.forEach(s=>{ state[s.id]={}; s.stories.forEach(st=>{ state[s.id][st.id]=0; }); }); }
 initState();
+function renderRoleTabs(){
+ const t=document.getElementById('roleTabs'); t.innerHTML='';
+ ROLES.forEach((r,i)=>{ const b=document.createElement('button'); b.textContent=r.name; if(i===roleIdx) b.className='active'; b.onclick=()=>{roleIdx=i; renderRole();}; t.appendChild(b); });
+}
+function renderRole(){
+ renderRoleTabs();
+ document.getElementById('rolePanel').innerHTML=`<strong>${ROLES[roleIdx].name}</strong><br>${ROLES[roleIdx].focus}`;
+ const ul=document.getElementById('bullets'); ul.innerHTML='';
+ ROLES[roleIdx].bullets.forEach(b=>{ const li=document.createElement('li'); li.textContent=b; ul.appendChild(li); });
+ document.getElementById('copyMsg').textContent='';
+}
+function copyBullets(){
+ const text=ROLES[roleIdx].bullets.map(b=>'• '+b).join('\n');
+ if(navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>{document.getElementById('copyMsg').textContent='Copied. Paste into your resume under the Portfolio Project label, then edit to the job description.';}); }
+ else { document.getElementById('copyMsg').textContent=text; }
+}
 function renderTabs(){
  const t=document.getElementById('tabs'); t.innerHTML='';
- SPRINTS.forEach(s=>{ const b=document.createElement('button'); b.textContent=s.name; if(s.id===current) b.className='active'; b.onclick=()=>{current=s.id; showSprint(); renderTabs();}; t.appendChild(b); });
+ SPRINTS.forEach(s=>{ const b=document.createElement('button'); b.textContent=s.name; if(s.id===current) b.className='active'; b.onclick=()=>{current=s.id; showSprint();}; t.appendChild(b); });
  const b=document.createElement('button'); b.textContent='Product Backlog'; b.onclick=()=>{showBacklog();}; t.appendChild(b);
 }
-function showSprint(){
- document.getElementById('sprintView').style.display='block';
- document.getElementById('backlogView').style.display='none';
- renderTabs(); renderBoard();
+function showSprint(){ document.getElementById('sprintView').style.display='block'; document.getElementById('backlogView').style.display='none'; renderTabs(); renderBoard(); }
+function showBacklog(){ document.getElementById('sprintView').style.display='none'; document.getElementById('backlogView').style.display='block'; renderTabs(); renderBacklog(); }
+function allStories(){
+ let list=[];
+ SPRINTS.forEach(s=>{ s.stories.forEach(st=>{ list.push({...st, sprint:s.name}); }); });
+ custom.forEach(st=>{ list.push(st); });
+ return list;
 }
-function showBacklog(){
- document.getElementById('sprintView').style.display='none';
- document.getElementById('backlogView').style.display='block';
- renderTabs();
+function renderBacklog(){
+ const f=document.getElementById('epicFilter').value;
  const list=document.getElementById('backlogList'); list.innerHTML='';
- SPRINTS.forEach(s=>{ s.stories.forEach(st=>{ const d=document.createElement('div'); d.className='backlog'; d.innerHTML=`<strong>${st.id} — ${st.epic}</strong><br>${st.title}<br><span class="tag">${st.points} points · Planned: ${s.name} · Acceptance: ${st.accept}</span>`; list.appendChild(d); }); });
+ allStories().filter(st=>f==='All'||st.epic===f).forEach(st=>{
+  const d=document.createElement('div'); d.className='backlog';
+  d.innerHTML=`<strong>${st.id} — ${st.epic}</strong><br>${st.title}<br><span class="tag">${st.points} points · Planned: ${st.sprint} · Acceptance: ${st.accept||'Add acceptance criteria when you refine this story.'}</span>`;
+  if(st.sprint==='Custom — add to a sprint below'){
+   const btn=document.createElement('button'); btn.className='small'; btn.textContent='Add to current sprint';
+   btn.onclick=()=>{ const s=SPRINTS.find(x=>x.id===current); s.stories.push(st); state[current][st.id]=0; document.getElementById('addMsg').textContent=`Added ${st.id} to ${s.name}. Switch to that sprint to move it across the board.`; showSprint(); };
+   d.appendChild(document.createElement('br')); d.appendChild(btn);
+  }
+  list.appendChild(d);
+ });
+}
+function addStory(){
+ const title=document.getElementById('newTitle').value.trim();
+ if(!title){ document.getElementById('addMsg').textContent='Add a story title first, in As a … , I want … , so that … form if you can.'; return; }
+ const id='C'+(custom.length+1);
+ custom.push({id, epic:document.getElementById('newEpic').value, title, points:parseInt(document.getElementById('newPoints').value), accept:'', sprint:'Custom — add to a sprint below'});
+ document.getElementById('newTitle').value='';
+ document.getElementById('addMsg').textContent=`Added ${id} to the backlog. Use “Add to current sprint” on that card to put it on a board.`;
+ renderBacklog();
 }
 function total(s){ return s.stories.reduce((a,st)=>a+st.points,0); }
 function donePoints(s){ return s.stories.filter(st=>state[s.id][st.id]===3).reduce((a,st)=>a+st.points,0); }
@@ -108,8 +206,9 @@ function renderBoard(){
  const s=SPRINTS.find(x=>x.id===current);
  document.getElementById('sprintTitle').textContent=s.name;
  document.getElementById('sprintGoal').textContent=s.goal;
- const done=donePoints(s), tot=total(s);
- document.getElementById('sprintStats').textContent=`Sprint total: ${tot} points · Completed: ${done} points · Remaining: ${tot-done} points`;
+ const done=donePoints(s), tot=total(s), doneCount=s.stories.filter(st=>state[s.id][st.id]===3).length;
+ document.getElementById('metrics').innerHTML=`<div class="metric"><b>${tot}</b>Total points</div><div class="metric"><b>${done}</b>Points done</div><div class="metric"><b>${tot-done}</b>Remaining</div><div class="metric"><b>${doneCount} / ${s.stories.length}</b>Stories done</div>`;
+ document.getElementById('sprintStats').textContent=`Sprint total: ${tot} points · Completed: ${done} points · Remaining: ${tot-done} points · Completion: ${tot?Math.round(done/tot*100):0}%`;
  document.getElementById('fill').style.width=(tot?done/tot*100:0)+'%';
  document.getElementById('progressText').textContent=`Progress: ${done} of ${tot} points done`;
  const board=document.getElementById('board'); board.innerHTML='';
@@ -117,7 +216,7 @@ function renderBoard(){
   const c=document.createElement('div'); c.className='col'; c.innerHTML=`<h3>${col}</h3>`;
   s.stories.filter(st=>state[s.id][st.id]===ci).forEach(st=>{
    const card=document.createElement('div'); card.className='card';
-   card.innerHTML=`<span class="tag">${st.id} · ${st.epic} · ${st.points} points</span><strong>${st.title}</strong><p>${st.accept}</p>`;
+   card.innerHTML=`<span class="tag">${st.id} · ${st.epic} · ${st.points} points</span><strong>${st.title}</strong><p>${st.accept||''}</p>`;
    const btn=document.createElement('button'); btn.className='small';
    btn.textContent= ci<3 ? 'Move forward →' : 'Done ✓ — move back';
    btn.onclick=()=>{ state[s.id][st.id]= ci<3 ? ci+1 : 0; renderBoard(); };
@@ -126,15 +225,24 @@ function renderBoard(){
   board.appendChild(c);
  });
  const burn=document.getElementById('burn'); burn.innerHTML='';
- const remaining=[tot];
- let rem=tot;
+ let rem=tot; const remaining=[tot];
  s.stories.forEach(st=>{ if(state[s.id][st.id]===3) rem-=st.points; remaining.push(rem); });
  const max=tot||1;
  remaining.forEach(v=>{ const d=document.createElement('div'); d.style.height=(v/max*100)+'%'; d.innerHTML=`<span>${v}</span>`; burn.appendChild(d); });
  document.getElementById('burnText').textContent=`Remaining work now: ${tot-done} points. Burndown starts at ${tot} and falls only when a story reaches Done.`;
 }
 function resetSprint(){ SPRINTS.find(x=>x.id===current).stories.forEach(st=>{ state[current][st.id]=0; }); renderBoard(); }
-renderTabs(); showSprint();
+function renderRaid(){
+ const r=document.getElementById('raid'); r.innerHTML='';
+ RAIDS.forEach(([risk,mit])=>{
+  const b=document.createElement('button'); b.textContent=risk; b.style.margin='4px';
+  b.onclick=()=>{ const p=document.getElementById('raidDetail'); p.textContent='Mitigation: '+mit; };
+  r.appendChild(b);
+ });
+ const p=document.createElement('p'); p.id='raidDetail'; p.className='muted'; p.textContent='Click a risk to see its mitigation.';
+ r.appendChild(p);
+}
+renderRole(); renderTabs(); showSprint(); renderRaid();
 </script>
 </body>
 </html>
