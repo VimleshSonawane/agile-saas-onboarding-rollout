@@ -31,6 +31,8 @@ input,select{padding:8px;border-radius:8px;border:1px solid #aaa}
 .road{display:flex;gap:12px;flex-wrap:wrap}
 .road div{flex:1;min-width:200px;border:1px solid #ddd;border-radius:10px;padding:12px}
 @media(max-width:800px){.board{grid-template-columns:1fr 1fr}.metrics{grid-template-columns:1fr 1fr}}
+@media(max-width:599.98px){.board{grid-template-columns:1fr}}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 </style>
 </head>
 <body>
@@ -49,8 +51,9 @@ input,select{padding:8px;border-radius:8px;border:1px solid #aaa}
 <p id="progressText"></p>
 <button class="small" onclick="resetSprint()">Reset sprint</button>
 <div class="board" id="board"></div>
+<p id="moveMsg" class="sr-only" aria-live="polite"></p>
 <h2>Remaining points as stories reach Done</h2>
-<p class="muted">Points left as stories move to Done. Start = sprint total. Each Done story drops the line.</p>
+<p class="muted">Points left as stories move to Done. Start = sprint total.</p>
 <div class="burn" id="burn"></div>
 <p class="muted">One bar per story, in list order. Each bar shows the points still remaining after that story is done.</p>
 <p id="burnText" class="muted"></p>
@@ -59,12 +62,15 @@ input,select{padding:8px;border-radius:8px;border:1px solid #aaa}
 <div id="backlogView" style="display:none">
 <h2>Product Backlog</h2>
 <p class="muted">From docs/backlog.md, plus any stories you add below. Future backlog, not in Sprint 1–3: additional import formats, automated reminders, deeper reporting.</p>
-<label>Filter by epic: <select id="epicFilter" onchange="renderBacklog()"><option value="All">All epics</option><option>Epic 1 — Account setup</option><option>Epic 2 — Guided onboarding checklist</option><option>Epic 3 — Data import</option><option>Epic 4 — Training and handoff</option><option>Epic 5 — Reporting and pilot feedback</option><option>Custom</option></select></label>
+<label>Filter by epic: <select id="epicFilter" onchange="renderBacklog()"><option value="All">All epics</option><option value="Custom">Custom</option></select></label>
 <div id="backlogList"></div>
 <h2>Add your own story</h2>
 <p class="muted">Try backlog refinement: add a story for a stakeholder, reporting, or process need. It is added to the backlog in this browser session only, it is not saved to the repo.</p>
+<label for="newTitle" class="sr-only">Story title</label>
 <input id="newTitle" placeholder="As a … , I want … , so that …" style="width:100%;margin:6px 0">
-<select id="newEpic"><option>Epic 1 — Account setup</option><option>Epic 2 — Guided onboarding checklist</option><option>Epic 3 — Data import</option><option>Epic 4 — Training and handoff</option><option>Epic 5 — Reporting and pilot feedback</option></select>
+<label for="newEpic" class="sr-only">Epic</label>
+<select id="newEpic"></select>
+<label for="newPoints" class="sr-only">Story points</label>
 <select id="newPoints"><option value="3">3 points</option><option value="5">5 points</option><option value="8">8 points</option></select>
 <button onclick="addStory()">Add to backlog</button>
 <p id="addMsg" class="muted"></p>
@@ -84,36 +90,23 @@ input,select{padding:8px;border-radius:8px;border:1px solid #aaa}
 
 <p class="muted">What this shows: backlog refinement, sprint planning with a goal and a point total, a Jira-style board, tracking by remaining work, risk and dependency management, and the trade-off when a story is not finished — it stays out of Done and out of the sprint's completed points. Sprint review and retrospective notes are in docs/sprint-plans.md and docs/retrospective.md.</p>
 
+<script src="data.js"></script>
 <script>
 const COLS=["To Do","In Progress","In Review","Done"];
-const SPRINTS=[
-{id:1,name:"Sprint 1 — Discovery and setup",goal:"Goal: Define the problem, stakeholders, and a usable backlog, and set up tracking before building.",capacity:8,stories:[
-{id:"1.1",epic:"Epic 1 — Account setup",title:"As a new partner/customer, I can create an account and see my onboarding stages, so I know what is next.",points:5,accept:"Stages, owners, and status are visible in one view; incomplete stages are clearly marked."},
-{id:"1.2",epic:"Epic 1 — Account setup",title:"As an internal user, I can assign an owner to each stage, so accountability is visible.",points:3,accept:"Every stage has one named owner role; unassigned stages are flagged."}
-]},
-{id:2,name:"Sprint 2 — Core build",goal:"Goal: Build the guided checklist, account setup view, and basic data import.",capacity:19,stories:[
-{id:"2.1",epic:"Epic 2 — Guided onboarding checklist",title:"As a new customer, I can follow a guided checklist in order, so I do not miss a required step.",points:8,accept:"Checklist order is enforced for required steps; progress updates as steps are completed."},
-{id:"2.2",epic:"Epic 2 — Guided onboarding checklist",title:"As a customer, I can see what is required from me versus what the internal team will do.",points:3,accept:"Each step is labelled customer action or internal action."},
-{id:"3.1",epic:"Epic 3 — Data import",title:"As a customer, I can import my core data using the most common format, so setup does not start from a blank sheet.",points:8,accept:"A sample import completes with a clear success/error summary."}
-]},
-{id:3,name:"Sprint 3 — Pilot, training, and go-live",goal:"Goal: Test the flow with a simulated pilot, fix the highest-impact issues, and prepare a go-live playbook.",capacity:21,stories:[
-{id:"3.2",epic:"Epic 3 — Data import",title:"As an internal user, I can see import errors in plain language, so I can help without engineering help for common cases.",points:5,accept:"Common errors show a fix suggestion, not only a code."},
-{id:"4.1",epic:"Epic 4 — Training and handoff",title:"As a customer, I can access short training materials linked to each stage, so I do not need a separate training call for basics.",points:5,accept:"Each major stage links to at least one training note or walkthrough."},
-{id:"4.2",epic:"Epic 4 — Training and handoff",title:"As a Customer Success user, I can confirm handoff only when the completion checklist is met.",points:3,accept:"Handoff is blocked until required items are marked complete."},
-{id:"5.1",epic:"Epic 5 — Reporting and pilot feedback",title:"As a project manager, I can see onboarding progress, blockers, and time in stage, so I can act early on delays.",points:5,accept:"Progress, blocker, and time-in-stage are visible for the pilot group."},
-{id:"5.2",epic:"Epic 5 — Reporting and pilot feedback",title:"As a pilot customer, I can give feedback on clarity and blockers, so the flow can be improved before full rollout.",points:3,accept:"Feedback is collected per stage and reviewed in the sprint retrospective."}
-]}
-];
-const RAIDS=[
-["Integration work runs late","Start with the most common import format first; phase other formats to a future backlog."],
-["Scope grows mid-sprint from Sales/Partnerships requests","Change log, weekly scope decision with the sponsor, and a clear out-of-scope list in the charter."],
-["Security/compliance review delays launch","Involve Security/Legal in Sprint 1; complete review before pilot go-live."],
-["Pilot customers do not complete training","Training linked to each stage, plus a completion checklist before handoff."]
-];
 let current=2, custom=[];
 let state={};
-function initState(){ state={}; SPRINTS.forEach(s=>{ state[s.id]={}; s.stories.forEach(st=>{ state[s.id][st.id]=0; }); }); }
+// Starting column for a story, from its status in data.js; stories without a known status start in To Do.
+function startCol(st){ return Math.max(0, COLS.indexOf(st.status)); }
+function initState(){ state={}; SPRINTS.forEach(s=>{ state[s.id]={}; s.stories.forEach(st=>{ state[s.id][st.id]=startCol(st); }); }); }
 initState();
+function fillEpicSelects(){
+ const filter=document.getElementById('epicFilter'), customOpt=filter.querySelector('option[value="Custom"]');
+ const add=document.getElementById('newEpic');
+ EPICS.forEach(e=>{
+  const o=document.createElement('option'); o.textContent=e; filter.insertBefore(o, customOpt);
+  const o2=document.createElement('option'); o2.textContent=e; add.appendChild(o2);
+ });
+}
 function renderTabs(){
  const t=document.getElementById('tabs'); t.innerHTML='';
  SPRINTS.forEach(s=>{ const b=document.createElement('button'); b.textContent=s.name; if(s.id===current) b.className='active'; b.onclick=()=>{current=s.id; showSprint();}; t.appendChild(b); });
@@ -171,9 +164,9 @@ function renderBoard(){
   s.stories.filter(st=>state[s.id][st.id]===ci).forEach(st=>{
    const card=document.createElement('div'); card.className='card';
    card.innerHTML=`<span class="tag">${esc(st.id)} · ${esc(st.epic)} · ${esc(st.points)} points</span><strong>${esc(st.title)}</strong><p>${esc(st.accept||'')}</p>`;
-   const btn=document.createElement('button'); btn.className='small';
+   const btn=document.createElement('button'); btn.className='small'; btn.dataset.story=st.id;
    btn.textContent= ci<3 ? 'Move forward →' : 'Done ✓ — move back';
-   btn.onclick=()=>{ state[s.id][st.id]= ci<3 ? ci+1 : 0; renderBoard(); };
+   btn.onclick=()=>{ state[s.id][st.id]= ci<3 ? ci+1 : 0; renderBoard(); afterMove(s, st); };
    card.appendChild(btn); c.appendChild(card);
   });
   board.appendChild(c);
@@ -185,7 +178,13 @@ function renderBoard(){
  remaining.forEach(v=>{ const d=document.createElement('div'); d.style.height=(v/max*100)+'%'; d.innerHTML=`<span>${v}</span>`; burn.appendChild(d); });
  document.getElementById('burnText').textContent=`Remaining work now: ${tot-done} points. The chart starts at ${tot} and falls only when a story reaches Done.`;
 }
-function resetSprint(){ SPRINTS.find(x=>x.id===current).stories.forEach(st=>{ state[current][st.id]=0; }); renderBoard(); }
+// The board is redrawn on every move, so put focus back on the moved story's button and announce the move.
+function afterMove(s, st){
+ const btn=[...document.querySelectorAll('#board button')].find(b=>b.dataset.story===st.id);
+ if(btn) btn.focus();
+ document.getElementById('moveMsg').textContent=`Story ${st.id} moved to ${COLS[state[s.id][st.id]]}. Remaining: ${total(s)-donePoints(s)} points.`;
+}
+function resetSprint(){ SPRINTS.find(x=>x.id===current).stories.forEach(st=>{ state[current][st.id]=startCol(st); }); renderBoard(); }
 function renderRaid(){
  const r=document.getElementById('raid'); r.innerHTML='';
  RAIDS.forEach(([risk,mit])=>{
@@ -196,7 +195,7 @@ function renderRaid(){
  const p=document.createElement('p'); p.id='raidDetail'; p.className='muted'; p.textContent='Click a risk to see its mitigation.';
  r.appendChild(p);
 }
-renderTabs(); showSprint(); renderRaid();
+fillEpicSelects(); renderTabs(); showSprint(); renderRaid();
 </script>
 </body>
 </html>
