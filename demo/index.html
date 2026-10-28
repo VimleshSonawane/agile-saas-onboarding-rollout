@@ -32,12 +32,48 @@ input,select{padding:8px;border-radius:8px;border:1px solid #aaa}
 .road div{flex:1;min-width:200px;border:1px solid #ddd;border-radius:10px;padding:12px}
 @media(max-width:800px){.board{grid-template-columns:1fr 1fr}.metrics{grid-template-columns:1fr 1fr}}
 @media(max-width:599.98px){.board{grid-template-columns:1fr}}
+.glance-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.glance-head h2{margin:0}
+.badge{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;border:1px solid #222;background:#fff}
+.glance p{margin:8px 0 0;overflow-wrap:anywhere}
+.doclinks{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:8px 0}
+.doclinks a{display:inline-block;padding:6px 12px;border:1px solid #ddd;border-radius:8px;color:#1a4fb0}
+a:focus-visible{outline:3px solid #1a5fd0;outline-offset:2px}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 </style>
 </head>
 <body>
 <h1>Agile Sprint Board: SaaS Onboarding Rollout (Simulated)</h1>
 <p class="muted">Simulated project by Vimlesh Sonawane, Project Manager. Not a production system, no real customer data. Timeline in the project: 6 weeks, 3 two-week sprints. Target in the simulation: onboarding from 21 days to 10 days — a target, not a real company result. Story points here are for demo illustration, not a real team's velocity.</p>
+
+<section class="panel glance" aria-labelledby="glanceTitle">
+<div class="glance-head"><h2 id="glanceTitle">At a glance</h2><span class="badge">Simulated</span></div>
+<p>Scenario: A simulated B2B partner/client onboarding rollout. In the scenario, the manual process took 21 days and depended on scattered checklists, email follow-ups, and a few individuals. Plan: 6 weeks, 3 two-week sprints, 10 user stories (48 illustrative points) across 5 epics, with a charter, 4 risks with mitigations, and a retrospective. Target: cut onboarding to 10 days (a target in the simulation, not a real company result). Try it: move stories across the board, watch remaining work change, add a backlog story, and click a risk to see its mitigation. What it shows: backlog refinement, sprint planning with a goal and a point total, risk and dependency tracking, and the trade-off when a story isn't finished. Role: Project manager (simulated).</p>
+</section>
+
+<nav aria-labelledby="docsTitle">
+<h2 id="docsTitle">Project documents</h2>
+<ul class="doclinks">
+<li><a href="https://github.com/VimleshSonawane/agile-saas-onboarding-rollout" target="_blank" rel="noopener noreferrer">Repo<span class="sr-only"> (opens in a new tab)</span></a></li>
+<li><a href="https://github.com/VimleshSonawane/agile-saas-onboarding-rollout/blob/main/README.md" target="_blank" rel="noopener noreferrer">README<span class="sr-only"> (opens in a new tab)</span></a></li>
+<li><a href="https://github.com/VimleshSonawane/agile-saas-onboarding-rollout/blob/main/docs/charter.md" target="_blank" rel="noopener noreferrer">Charter<span class="sr-only"> (opens in a new tab)</span></a></li>
+<li><a href="https://github.com/VimleshSonawane/agile-saas-onboarding-rollout/blob/main/docs/backlog.md" target="_blank" rel="noopener noreferrer">Backlog<span class="sr-only"> (opens in a new tab)</span></a></li>
+<li><a href="https://github.com/VimleshSonawane/agile-saas-onboarding-rollout/blob/main/docs/raid-log.md" target="_blank" rel="noopener noreferrer">RAID log<span class="sr-only"> (opens in a new tab)</span></a></li>
+<li><a href="https://github.com/VimleshSonawane/agile-saas-onboarding-rollout/blob/main/docs/sprint-plans.md" target="_blank" rel="noopener noreferrer">Sprint plans<span class="sr-only"> (opens in a new tab)</span></a></li>
+<li><a href="https://github.com/VimleshSonawane/agile-saas-onboarding-rollout/blob/main/docs/retrospective.md" target="_blank" rel="noopener noreferrer">Retrospective<span class="sr-only"> (opens in a new tab)</span></a></li>
+</ul>
+</nav>
+
+<section aria-labelledby="successTitle">
+<h2 id="successTitle">How success is judged (from the charter)</h2>
+<ol id="successList">
+<li>A customer can see every onboarding stage, owner, and next step in one view</li>
+<li>Training handoff has a written completion checklist, not an informal handover</li>
+<li>Security review is completed before pilot go-live, not after</li>
+<li>Pilot feedback is collected, analysed, and used to change at least one flow step before full rollout</li>
+<li>A retrospective records what worked, what did not, and what to change next time</li>
+</ol>
+</section>
 
 <h2>1. Sprint board — try it</h2>
 <p class="muted">Pick a sprint, read its goal, click <strong>Move forward</strong> on a story to move it To Do → In Progress → In Review → Done. Points and remaining work change only when a story reaches Done. Use <strong>Reset sprint</strong> to run it again.</p>
