@@ -39,6 +39,10 @@ input,select{padding:8px;border-radius:8px;border:1px solid #aaa}
 .doclinks{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:8px 0}
 .doclinks a{display:inline-block;padding:6px 12px;border:1px solid #ddd;border-radius:8px;color:#1a4fb0}
 a:focus-visible{outline:3px solid #1a5fd0;outline-offset:2px}
+.shot{margin:16px 0 24px}
+.shot a{display:block;border-radius:10px}
+.shot img{display:block;width:100%;max-width:100%;height:auto;border:1px solid #ddd;border-radius:10px}
+.shot figcaption{font-size:14px;color:#555;margin-top:6px}
 button.details{margin-left:6px}
 .backlog button.details{margin-left:0;margin-right:6px}
 .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
@@ -192,6 +196,31 @@ html.modal-open{overflow:hidden}
 <div><strong>Sprint 2 — Weeks 3–4</strong><br>Core build<br>Milestone: Core flow walkthrough; two usability issues logged for Sprint 3.</div>
 <div><strong>Sprint 3 — Weeks 5–6</strong><br>Pilot, training, go-live<br>Milestone: Go-live readiness review against charter success criteria.</div>
 </div>
+
+<section id="jiraSection" aria-labelledby="jiraTitle">
+<h2 id="jiraTitle">3. Same backlog in Jira (simulated data)</h2>
+<p>I set up the same simulated backlog and board in Jira (free plan) to practice the tools. Everything below is simulated: there is no real team, customer, or company data. In Jira, Sprint 3 is named 'Pilot and go-live'. The Kanban limits are set to 3 for In Progress and 2 for In Review.</p>
+<figure class="shot">
+<a href="img/jira-1-backlog.png" target="_blank" rel="noopener noreferrer"><img src="img/jira-1-backlog.png" alt="Jira Scrum backlog with three sprints" width="2924" height="1524" loading="lazy"></a>
+<figcaption><em>Scrum space: the same 10 user stories (48 points) across 3 sprints and 5 epics as the demo.</em></figcaption>
+</figure>
+<figure class="shot">
+<a href="img/jira-2-sprint-board.png" target="_blank" rel="noopener noreferrer"><img src="img/jira-2-sprint-board.png" alt="Jira backlog view of the active Sprint 2" width="2878" height="916" loading="lazy"></a>
+<figcaption><em>Sprint 2 running, with story 2.1 In Progress, 2.2 Done, and 3.1 To Do.</em></figcaption>
+</figure>
+<figure class="shot">
+<a href="img/jira-3-board.png" target="_blank" rel="noopener noreferrer"><img src="img/jira-3-board.png" alt="Jira Scrum sprint board for Sprint 2" width="2910" height="936" loading="lazy"></a>
+<figcaption><em>The same sprint on the board, with the four columns used in the demo: To Do, In Progress, In Review, and Done.</em></figcaption>
+</figure>
+<figure class="shot">
+<a href="img/jira-5-kanban.png" target="_blank" rel="noopener noreferrer"><img src="img/jira-5-kanban.png" alt="Jira Kanban board with eight request cards" width="2538" height="1110" loading="lazy"></a>
+<figcaption><em>Kanban space (after go-live): the same 8 illustrative request cards, in the same starting columns as the demo. In Progress and In Review each show a work-in-progress limit icon.</em></figcaption>
+</figure>
+<figure class="shot">
+<a href="img/jira-6-over-limit.png" target="_blank" rel="noopener noreferrer"><img src="img/jira-6-over-limit.png" alt="Jira Kanban board with In Progress over its limit" width="2868" height="1348" loading="lazy"></a>
+<figcaption><em>In Progress holding 4 cards, more than its work-in-progress limit. Jira turns the column's limit icon red as a warning.</em></figcaption>
+</figure>
+</section>
 
 <p class="muted">What this shows: backlog refinement, sprint planning with a goal and a point total, a Jira-style board, tracking by remaining work, risk and dependency management, and the trade-off when a story is not finished — it stays out of Done and out of the sprint's completed points. Sprint review and retrospective notes are in docs/sprint-plans.md and docs/retrospective.md.</p>
 
