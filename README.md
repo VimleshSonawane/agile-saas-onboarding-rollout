@@ -3,6 +3,7 @@
 **Author:** Vimlesh Sonawane, Project Manager
 **Status:** Self-initiated project — simulated scenario, not a client engagement and not an employer project.
 **Timeline in the project:** 6 weeks, 3 two-week sprints
+**Live demo:** https://agile-demo.vimleshsonawane.com/ (simulated; no real customer data)
 
 ## What I created
 
@@ -14,6 +15,20 @@ I created a complete, end-to-end onboarding rollout plan for a B2B partner/clien
 - A RAID log (risks, assumptions, issues, dependencies) with mitigations
 - A working demo in `demo/index.html`: an interactive Agile board — product backlog, Sprint 1–3 boards, sprint goals and point totals, remaining-work tracking, RAID risks, roadmap, and custom-story adding
 - A retrospective and a set of honest resume bullets in `docs/resume-bullets.md`
+
+## What the demo includes
+
+- Sprint boards for 3 two-week sprints: 10 user stories, 48 illustrative points, 5 epics. Move stories through To Do, In Progress, In Review, and Done, and watch remaining points change.
+- Product backlog with an epic filter and an "Add your own story" form (session only, not saved).
+- Story Details panel showing each story's acceptance criteria.
+- Risk log with 4 risks and their mitigations, and milestones for each sprint.
+- The charter's five success criteria and links to the project documents.
+- Kanban view (after go-live): work-in-progress limits (In Progress 3, In Review 2), blocked cards, and a demo-day counter.
+- Flow metrics (simulated): card age, average cycle time, cards completed in the last 7 days, and a cumulative flow diagram.
+
+## How to read the numbers
+
+Every number in the demo is simulated. The 21-day to 10-day onboarding figure is a target, not a result. Story points are illustrative, not a real team's velocity. The Kanban cards (Request 1 to Request 8) and their starting history are illustrative, so the flow metrics show how the measures work, not real team performance. The sprint boards and the Kanban view show two phases: Scrum to build the onboarding flow, and Kanban to run requests after go-live.
 
 ## What I analysed
 
