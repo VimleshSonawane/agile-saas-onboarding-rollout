@@ -30,6 +30,25 @@ I created a complete, end-to-end onboarding rollout plan for a B2B partner/clien
 
 Every number in the demo is simulated. The 21-day to 10-day onboarding figure is a target, not a result. Story points are illustrative, not a real team's velocity. The Kanban cards (Request 1 to Request 8) and their starting history are illustrative, so the flow metrics show how the measures work, not real team performance. The sprint boards and the Kanban view show two phases: Scrum to build the onboarding flow, and Kanban to run requests after go-live.
 
+## Same backlog in Jira (simulated data)
+
+I set up the same simulated backlog and board in Jira (free plan) to practice the tools. Everything below is simulated: there is no real team, customer, or company data.
+
+![Jira Scrum backlog with three sprints](docs/jira-1-backlog.png)
+*Scrum space: the same 10 user stories (48 points) across 3 sprints and 5 epics as the demo.*
+
+![Jira backlog view of the active Sprint 2](docs/jira-2-sprint-board.png)
+*Sprint 2 running, with story 2.1 In Progress, 2.2 Done, and 3.1 To Do.*
+
+![Jira Scrum sprint board for Sprint 2](docs/jira-3-board.png)
+*The same sprint on the board, with the four columns used in the demo: To Do, In Progress, In Review, and Done.*
+
+![Jira Kanban board with eight request cards](docs/jira-5-kanban.png)
+*Kanban space (after go-live): the same 8 illustrative request cards, in the same starting columns as the demo. In Progress and In Review each show a work-in-progress limit icon.*
+
+![Jira Kanban board with In Progress over its limit](docs/jira-6-over-limit.png)
+*In Progress holding 4 cards, more than its work-in-progress limit. Jira turns the column's limit icon red as a warning.*
+
 ## What I analysed
 
 I analysed a manual onboarding process that, in the simulated scenario, took 21 days and depended on scattered checklists, email follow-ups, and a few individuals.
