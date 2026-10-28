@@ -55,6 +55,14 @@ html.modal-open{overflow:hidden}
 .card.blocked{border-color:#b42318;border-left-width:4px}
 .blocked-badge{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;background:#b42318;color:#fff;margin:4px 0}
 .kbtns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.kday{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:8px 0}
+.age{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid #bbb;color:#444;margin:4px 0}
+.fmetrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:10px 0}
+.fmetrics .metric b.small-text{font-size:15px}
+.tablewrap{overflow-x:auto;max-width:100%}
+.tablewrap:focus-visible{outline:3px solid #1a5fd0;outline-offset:2px}
+.ftable{border-collapse:collapse;width:100%;min-width:420px;font-size:14px}
+.ftable th,.ftable td{border-bottom:1px solid #ddd;padding:6px 8px;text-align:left}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 </style>
 </head>
@@ -131,10 +139,22 @@ html.modal-open{overflow:hidden}
 <div id="kanbanView" style="display:none">
 <h2>Kanban (after go-live)</h2>
 <p class="muted">After go-live, onboarding requests arrive continuously, so the team runs them as Kanban: a continuous flow with a limit on how many items can be in progress at once. All cards here are illustrative.</p>
+<div class="kday"><strong>Demo day <span id="kanbanDay"></span></strong><button class="small" id="kanbanAdvance" type="button">Advance 1 day</button></div>
 <button class="small" id="kanbanReset" type="button">Reset Kanban</button>
 <p id="kanbanMsg" class="kmsg"></p>
 <div class="board" id="kanbanBoard"></div>
 <p id="kanbanLive" class="sr-only" aria-live="polite"></p>
+<section class="panel" aria-labelledby="flowTitle">
+<h3 id="flowTitle">Flow metrics (simulated)</h3>
+<p class="muted">Dates here are demo days, not real dates, and the starting history is illustrative.</p>
+<div class="fmetrics" id="flowTiles"></div>
+<div class="tablewrap" tabindex="0" role="region" aria-label="Completed cards">
+<table class="ftable">
+<thead><tr><th scope="col">Request</th><th scope="col">In Progress day</th><th scope="col">Done day</th><th scope="col">Cycle time (days)</th></tr></thead>
+<tbody id="flowRows"></tbody>
+</table>
+</div>
+</section>
 </div>
 
 <h2>2. Risks, blockers, and roadmap</h2>
@@ -333,8 +353,9 @@ function setupDetails(){
  document.addEventListener('focusin',e=>{ if(!bd.hidden && !panel.contains(e.target)) document.getElementById('detailClose').focus(); });
 }
 // Kanban (after go-live). Cards live in memory only; Reset or a reload restores KANBAN_CARDS.
-let kCards=[];
-function resetKanbanState(){ kCards=KANBAN_CARDS.map(c=>({...c, col:Math.max(0, COLS.indexOf(c.status))})); }
+let kCards=[], kDay=KANBAN_START_DAY;
+// Copy the history arrays too, so moves never change the seeded data and Reset restores it.
+function resetKanbanState(){ kDay=KANBAN_START_DAY; kCards=KANBAN_CARDS.map(c=>({...c, col:Math.max(0, COLS.indexOf(c.status)), history:Object.fromEntries(Object.entries(c.history||{}).map(([k,v])=>[k,[...v]]))})); }
 resetKanbanState();
 function kCount(ci){ return kCards.filter(c=>c.col===ci).length; }
 function kHeading(ci){ const lim=KANBAN_LIMITS[COLS[ci]]; return lim ? `${COLS[ci]} (${kCount(ci)} / ${lim})` : `${COLS[ci]} (${kCount(ci)})`; }
@@ -348,6 +369,7 @@ function renderKanban(){
    const name=document.createElement('strong'); name.textContent=k.name; card.appendChild(name);
    const type=document.createElement('span'); type.className='tag'; type.textContent=k.type; card.appendChild(type);
    if(k.blocked){ const bb=document.createElement('div'); bb.className='blocked-badge'; bb.textContent='Blocked'; card.appendChild(bb); }
+   if(ci<3){ const n=kAge(k); const ab=document.createElement('div'); ab.className='age'; ab.textContent=`${n} ${n===1?'day':'days'} in this column`; card.appendChild(ab); }
    const row=document.createElement('div'); row.className='kbtns';
    const mk=(action,label,fn)=>{ const b=document.createElement('button'); b.type='button'; b.className='small'; b.dataset.card=k.id; b.dataset.action=action; b.textContent=label; b.onclick=()=>fn(k); row.appendChild(b); };
    if(ci<3) mk('forward','Move forward →',k=>kMove(k,1,'forward'));
@@ -357,6 +379,24 @@ function renderKanban(){
   });
   board.appendChild(c);
  });
+ renderFlow();
+}
+// Flow metrics, all in demo days.
+function kEntered(k, col){ const h=k.history[col]; return h&&h.length ? h : null; }
+function kAge(k){ const h=kEntered(k, COLS[k.col]); return h ? kDay-h[h.length-1] : 0; }
+// Cycle time: first entry into In Progress to the most recent entry into Done.
+function kCycle(k){ const ip=kEntered(k,'In Progress'), d=kEntered(k,'Done'); return ip&&d ? {start:ip[0], done:d[d.length-1], days:d[d.length-1]-ip[0]} : null; }
+function renderFlow(){
+ document.getElementById('kanbanDay').textContent=kDay;
+ const done=kCards.filter(k=>k.col===3).map(k=>({k, c:kCycle(k)})).filter(x=>x.c);
+ const avg= done.length ? `${(done.reduce((a,x)=>a+x.c.days,0)/done.length).toFixed(1)} days` : 'No completed cards yet';
+ const recent=done.filter(x=>x.c.done>=kDay-6 && x.c.done<=kDay).length;
+ const tiles=[[kDay,'Demo day'],[avg,'Average cycle time'],[recent,'Completed in the last 7 days'],[`${kCount(1)} / ${KANBAN_LIMITS['In Progress']}`,'In Progress now'],[kCards.filter(k=>k.blocked).length,'Blocked now']];
+ const t=document.getElementById('flowTiles'); t.innerHTML='';
+ tiles.forEach(([v,label])=>{ const d=document.createElement('div'); d.className='metric'; const b=document.createElement('b'); b.textContent=v; if(!done.length&&label==='Average cycle time') b.className='small-text'; d.appendChild(b); d.appendChild(document.createTextNode(label)); t.appendChild(d); });
+ const rows=document.getElementById('flowRows'); rows.innerHTML='';
+ if(!done.length){ const tr=document.createElement('tr'); const td=document.createElement('td'); td.colSpan=4; td.textContent='No completed cards yet'; tr.appendChild(td); rows.appendChild(tr); }
+ done.forEach(({k,c})=>{ const tr=document.createElement('tr'); [k.name,c.start,c.done,c.days].forEach(v=>{ const td=document.createElement('td'); td.textContent=v; tr.appendChild(td); }); rows.appendChild(tr); });
 }
 function kAnnounce(msg, refused){
  document.getElementById('kanbanMsg').textContent= refused ? msg : '';
@@ -375,7 +415,7 @@ function kMove(k, dir, action){
  if(k.blocked) kAnnounce('This card is blocked. Unblock it before moving it.', true);
  else if(to<0) kAnnounce(`${k.name} is already in To Do, the first column.`, true);
  else if(KANBAN_LIMITS[COLS[to]] && kCount(to)>=KANBAN_LIMITS[COLS[to]]) kAnnounce('WIP limit reached: finish or unblock something first.', true);
- else { k.col=to; kAnnounce(`${k.name} moved to ${COLS[to]}.`, false); }
+ else { k.col=to; (k.history[COLS[to]]=k.history[COLS[to]]||[]).push(kDay); kAnnounce(`${k.name} moved to ${COLS[to]}.`, false); }
  renderKanban(); kRefocus(k.id, action);
 }
 function kToggleBlock(k){
@@ -383,6 +423,7 @@ function kToggleBlock(k){
  renderKanban(); kRefocus(k.id, 'block');
 }
 document.getElementById('kanbanReset').onclick=()=>{ resetKanbanState(); renderKanban(); kAnnounce('Kanban reset to the starting state.', false); };
+document.getElementById('kanbanAdvance').onclick=()=>{ kDay++; renderKanban(); kAnnounce(`Demo day ${kDay}.`, false); };
 setupDetails(); fillEpicSelects(); renderTabs(); showSprint(); renderRaid();
 </script>
 </body>
