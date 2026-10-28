@@ -62,6 +62,12 @@ html.modal-open{overflow:hidden}
 .tablewrap{overflow-x:auto;max-width:100%}
 .tablewrap:focus-visible{outline:3px solid #1a5fd0;outline-offset:2px}
 .ftable{border-collapse:collapse;width:100%;min-width:420px;font-size:14px}
+.cfd-title{font-size:16px;margin:20px 0 6px}
+.cfd-legend{display:flex;flex-wrap:wrap;gap:6px 16px;list-style:none;padding:0;margin:0 0 6px;font-size:14px}
+.cfd-legend .swatch{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.cfd{display:block;width:100%;max-width:560px;height:auto}
+.cfd-numbers summary{cursor:pointer;font-weight:600;margin:4px 0}
+.cfd-numbers summary:focus-visible{outline:3px solid #1a5fd0;outline-offset:2px}
 .ftable th,.ftable td{border-bottom:1px solid #ddd;padding:6px 8px;text-align:left}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 </style>
@@ -154,6 +160,24 @@ html.modal-open{overflow:hidden}
 <tbody id="flowRows"></tbody>
 </table>
 </div>
+<h4 class="cfd-title">Cumulative flow diagram (simulated)</h4>
+<ul class="cfd-legend">
+<li><span class="swatch" style="background:#8a94a6"></span>To Do</li>
+<li><span class="swatch" style="background:#d1822b"></span>In Progress</li>
+<li><span class="swatch" style="background:#6a4fb3"></span>In Review</li>
+<li><span class="swatch" style="background:#1b7f5a"></span>Done</li>
+</ul>
+<svg id="cfdSvg" class="cfd" role="img" aria-labelledby="cfdTitleSvg cfdDesc" xmlns="http://www.w3.org/2000/svg"></svg>
+<p class="muted">How to read this chart: each band is the number of cards in that column on that demo day. A band that keeps widening means work is piling up in that column. Bands that stay roughly parallel mean work is flowing steadily. Simulated.</p>
+<details class="cfd-numbers">
+<summary>Show the numbers</summary>
+<div class="tablewrap" tabindex="0" role="region" aria-label="Cumulative flow numbers by demo day">
+<table class="ftable">
+<thead><tr><th scope="col">Day</th><th scope="col">To Do</th><th scope="col">In Progress</th><th scope="col">In Review</th><th scope="col">Done</th></tr></thead>
+<tbody id="cfdRows"></tbody>
+</table>
+</div>
+</details>
 </section>
 </div>
 
@@ -355,7 +379,10 @@ function setupDetails(){
 // Kanban (after go-live). Cards live in memory only; Reset or a reload restores KANBAN_CARDS.
 let kCards=[], kDay=KANBAN_START_DAY;
 // Copy the history arrays too, so moves never change the seeded data and Reset restores it.
-function resetKanbanState(){ kDay=KANBAN_START_DAY; kCards=KANBAN_CARDS.map(c=>({...c, col:Math.max(0, COLS.indexOf(c.status)), history:Object.fromEntries(Object.entries(c.history||{}).map(([k,v])=>[k,[...v]]))})); }
+function resetKanbanState(){ kDay=KANBAN_START_DAY; kCards=KANBAN_CARDS.map(c=>({...c, col:Math.max(0, COLS.indexOf(c.status)), history:Object.fromEntries(Object.entries(c.history||{}).map(([k,v])=>[k,[...v]])), log:seedLog(c.history||{})})); }
+// log: every column entry in the order it was recorded, as {day, ci}. The seeded history is
+// ordered by day (then column order); moves append, so for same-day entries the later one wins.
+function seedLog(h){ return Object.entries(h).flatMap(([col,days])=>days.map(day=>({day, ci:COLS.indexOf(col)}))).sort((a,b)=>a.day-b.day||a.ci-b.ci); }
 resetKanbanState();
 function kCount(ci){ return kCards.filter(c=>c.col===ci).length; }
 function kHeading(ci){ const lim=KANBAN_LIMITS[COLS[ci]]; return lim ? `${COLS[ci]} (${kCount(ci)} / ${lim})` : `${COLS[ci]} (${kCount(ci)})`; }
@@ -397,6 +424,55 @@ function renderFlow(){
  const rows=document.getElementById('flowRows'); rows.innerHTML='';
  if(!done.length){ const tr=document.createElement('tr'); const td=document.createElement('td'); td.colSpan=4; td.textContent='No completed cards yet'; tr.appendChild(td); rows.appendChild(tr); }
  done.forEach(({k,c})=>{ const tr=document.createElement('tr'); [k.name,c.start,c.done,c.days].forEach(v=>{ const td=document.createElement('td'); td.textContent=v; tr.appendChild(td); }); rows.appendChild(tr); });
+ renderCfd();
+}
+// Cumulative flow: on day d a card counts in the column of its latest log entry with day <= d.
+function cfdCounts(){
+ const out=[];
+ for(let d=1; d<=kDay; d++){
+  const n=[0,0,0,0];
+  kCards.forEach(k=>{ let ci=-1; k.log.forEach(e=>{ if(e.day<=d) ci=e.ci; }); if(ci>=0) n[ci]++; });
+  out.push({day:d, n});
+ }
+ return out;
+}
+const CFD_COLORS=["#8a94a6","#d1822b","#6a4fb3","#1b7f5a"]; // To Do, In Progress, In Review, Done
+function renderCfd(){
+ const data=cfdCounts(), NS='http://www.w3.org/2000/svg';
+ const svg=document.getElementById('cfdSvg'), cw=svg.getBoundingClientRect().width;
+ // The viewBox width follows the drawn width (320–560 units) so the text stays readable on phones.
+ const W=cw ? Math.round(Math.min(560, Math.max(320, cw))) : 420, H=240, L=40, R=12, T=12, B=44, pw=W-L-R, ph=H-T-B;
+ const maxTotal=Math.max(1, ...data.map(x=>x.n.reduce((a,v)=>a+v,0)));
+ const yMax=Math.ceil(maxTotal/2)*2, yStep=yMax<=4?1:2;
+ const x=d=> L + (kDay>1 ? (d-1)/(kDay-1)*pw : pw/2);
+ const y=v=> T + ph - v/yMax*ph;
+ svg.innerHTML='';
+ svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+ const el=(tag,attrs,text)=>{ const e=document.createElementNS(NS,tag); Object.entries(attrs).forEach(([a,v])=>e.setAttribute(a,v)); if(text!=null) e.textContent=text; svg.appendChild(e); return e; };
+ el('title',{id:'cfdTitleSvg'},`Cumulative flow diagram, demo days 1 to ${kDay}`);
+ el('desc',{id:'cfdDesc'},'Stacked bands, bottom to top: Done, In Review, In Progress, To Do. The same numbers are in the "Show the numbers" table.');
+ // Stack from the bottom: Done (3), In Review (2), In Progress (1), To Do (0).
+ const order=[3,2,1,0]; let base=data.map(()=>0);
+ order.forEach(ci=>{
+  const top=data.map((p,i)=>base[i]+p.n[ci]);
+  const pts=data.map((p,i)=>`${x(p.day)},${y(top[i])}`).concat(data.map((p,i)=>`${x(p.day)},${y(base[i])}`).reverse());
+  el('polygon',{points:pts.join(' '),fill:CFD_COLORS[ci],stroke:'#fff','stroke-width':1});
+  base=top;
+ });
+ // Axes, ticks and labels.
+ el('line',{x1:L,y1:T+ph,x2:L+pw,y2:T+ph,stroke:'#555'});
+ el('line',{x1:L,y1:T,x2:L,y2:T+ph,stroke:'#555'});
+ for(let v=0; v<=yMax; v+=yStep){ el('line',{x1:L-4,y1:y(v),x2:L,y2:y(v),stroke:'#555'}); el('text',{x:L-7,y:y(v)+4,'text-anchor':'end','font-size':11,fill:'#333'},v); }
+ // Day ticks: 1, every 5th day (every day up to day 10), and today, dropping a 5th-day tick that would crowd today.
+ const step=kDay<=10?1:kDay<=50?5:10, ticks=[1];
+ for(let d=step; d<=kDay; d+=step) if(d>1) ticks.push(d);
+ if(ticks[ticks.length-1]!==kDay){ if(kDay-ticks[ticks.length-1]<step/2+0.5 && ticks.length>1) ticks.pop(); ticks.push(kDay); }
+ ticks.forEach(d=>{ el('line',{x1:x(d),y1:T+ph,x2:x(d),y2:T+ph+4,stroke:'#555'}); el('text',{x:x(d),y:T+ph+16,'text-anchor':'middle','font-size':11,fill:'#333'},d); });
+ el('text',{x:L+pw/2,y:H-6,'text-anchor':'middle','font-size':12,fill:'#222'},'Demo day');
+ el('text',{x:12,y:T+ph/2,'text-anchor':'middle','font-size':12,fill:'#222',transform:`rotate(-90 12 ${T+ph/2})`},'Cards');
+ // Numbers table (one row per day).
+ const body=document.getElementById('cfdRows'); body.innerHTML='';
+ data.forEach(p=>{ const tr=document.createElement('tr'); [p.day,...p.n].forEach(v=>{ const td=document.createElement('td'); td.textContent=v; tr.appendChild(td); }); body.appendChild(tr); });
 }
 function kAnnounce(msg, refused){
  document.getElementById('kanbanMsg').textContent= refused ? msg : '';
@@ -415,7 +491,7 @@ function kMove(k, dir, action){
  if(k.blocked) kAnnounce('This card is blocked. Unblock it before moving it.', true);
  else if(to<0) kAnnounce(`${k.name} is already in To Do, the first column.`, true);
  else if(KANBAN_LIMITS[COLS[to]] && kCount(to)>=KANBAN_LIMITS[COLS[to]]) kAnnounce('WIP limit reached: finish or unblock something first.', true);
- else { k.col=to; (k.history[COLS[to]]=k.history[COLS[to]]||[]).push(kDay); kAnnounce(`${k.name} moved to ${COLS[to]}.`, false); }
+ else { k.col=to; (k.history[COLS[to]]=k.history[COLS[to]]||[]).push(kDay); k.log.push({day:kDay, ci:to}); kAnnounce(`${k.name} moved to ${COLS[to]}.`, false); }
  renderKanban(); kRefocus(k.id, action);
 }
 function kToggleBlock(k){
@@ -423,6 +499,7 @@ function kToggleBlock(k){
  renderKanban(); kRefocus(k.id, 'block');
 }
 document.getElementById('kanbanReset').onclick=()=>{ resetKanbanState(); renderKanban(); kAnnounce('Kanban reset to the starting state.', false); };
+let cfdResize; window.addEventListener('resize',()=>{ clearTimeout(cfdResize); cfdResize=setTimeout(()=>{ if(kanbanOn) renderCfd(); },150); });
 document.getElementById('kanbanAdvance').onclick=()=>{ kDay++; renderKanban(); kAnnounce(`Demo day ${kDay}.`, false); };
 setupDetails(); fillEpicSelects(); renderTabs(); showSprint(); renderRaid();
 </script>
