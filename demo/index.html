@@ -3,13 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Agile Board Demo — SaaS Onboarding Rollout</title>
+<title>Agile Sprint Board: SaaS Onboarding Rollout (Simulated)</title>
 <style>
 body{font-family:system-ui,Arial,sans-serif;max-width:1080px;margin:32px auto;padding:0 20px;color:#222;line-height:1.5}
 h1{font-size:30px;margin-bottom:4px} h2{font-size:20px;margin-top:28px} .muted{color:#666}
 button{padding:8px 14px;border-radius:8px;border:1px solid #222;background:#fff;cursor:pointer}
 button.active{background:#222;color:#fff}
 button.small{padding:4px 10px;font-size:13px}
+button:focus-visible{outline:3px solid #1a5fd0;outline-offset:2px}
+button:disabled{opacity:.55;cursor:not-allowed}
 input,select{padding:8px;border-radius:8px;border:1px solid #aaa}
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
 .board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
@@ -32,7 +34,7 @@ input,select{padding:8px;border-radius:8px;border:1px solid #aaa}
 </style>
 </head>
 <body>
-<h1>Agile Board Demo — SaaS Onboarding Rollout</h1>
+<h1>Agile Sprint Board: SaaS Onboarding Rollout (Simulated)</h1>
 <p class="muted">Simulated project by Vimlesh Sonawane, Project Manager. Not a production system, no real customer data. Timeline in the project: 6 weeks, 3 two-week sprints. Target in the simulation: onboarding from 21 days to 10 days — a target, not a real company result. Story points here are for demo illustration, not a real team's velocity.</p>
 
 <h2>1. Sprint board — try it</h2>
@@ -47,9 +49,10 @@ input,select{padding:8px;border-radius:8px;border:1px solid #aaa}
 <p id="progressText"></p>
 <button class="small" onclick="resetSprint()">Reset sprint</button>
 <div class="board" id="board"></div>
-<h2>Remaining work</h2>
+<h2>Remaining points as stories reach Done</h2>
 <p class="muted">Points left as stories move to Done. Start = sprint total. Each Done story drops the line.</p>
 <div class="burn" id="burn"></div>
+<p class="muted">One bar per story, in list order. Each bar shows the points still remaining after that story is done.</p>
 <p id="burnText" class="muted"></p>
 </div>
 
@@ -118,21 +121,25 @@ function renderTabs(){
 }
 function showSprint(){ document.getElementById('sprintView').style.display='block'; document.getElementById('backlogView').style.display='none'; renderTabs(); renderBoard(); }
 function showBacklog(){ document.getElementById('sprintView').style.display='none'; document.getElementById('backlogView').style.display='block'; renderTabs(); renderBacklog(); }
+function esc(v){ return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function allStories(){
  let list=[];
- SPRINTS.forEach(s=>{ s.stories.forEach(st=>{ list.push({...st, sprint:s.name}); }); });
+ // Custom stories are listed once, from the custom list, even after they are added to a sprint.
+ SPRINTS.forEach(s=>{ s.stories.forEach(st=>{ if(!st.custom) list.push({...st, sprint:s.name}); }); });
  custom.forEach(st=>{ list.push(st); });
  return list;
 }
 function renderBacklog(){
  const f=document.getElementById('epicFilter').value;
  const list=document.getElementById('backlogList'); list.innerHTML='';
- allStories().filter(st=>f==='All'||st.epic===f).forEach(st=>{
+ allStories().filter(st=>f==='All'||st.epic===f||(f==='Custom'&&st.custom)).forEach(st=>{
   const d=document.createElement('div'); d.className='backlog';
-  d.innerHTML=`<strong>${st.id} — ${st.epic}</strong><br>${st.title}<br><span class="tag">${st.points} points · Planned: ${st.sprint} · Acceptance: ${st.accept||'Add acceptance criteria when you refine this story.'}</span>`;
-  if(st.sprint==='Custom — add to a sprint below'){
-   const btn=document.createElement('button'); btn.className='small'; btn.textContent='Add to current sprint';
-   btn.onclick=()=>{ const s=SPRINTS.find(x=>x.id===current); s.stories.push(st); state[current][st.id]=0; document.getElementById('addMsg').textContent=`Added ${st.id} to ${s.name}. Switch to that sprint to move it across the board.`; showSprint(); };
+  d.innerHTML=`<strong>${esc(st.id)} — ${esc(st.epic)}${st.custom?' · Custom':''}</strong><br>${esc(st.title)}<br><span class="tag">${esc(st.points)} points · Planned: ${esc(st.sprint)} · Acceptance: ${esc(st.accept||'Add acceptance criteria when you refine this story.')}</span>`;
+  if(st.custom){
+   const btn=document.createElement('button'); btn.className='small';
+   btn.textContent= st.added ? 'Added to a sprint' : 'Add to current sprint';
+   btn.disabled=!!st.added;
+   btn.onclick=()=>{ if(st.added) return; const s=SPRINTS.find(x=>x.id===current); s.stories.push(st); state[current][st.id]=0; st.added=true; st.sprint=s.name; document.getElementById('addMsg').textContent=`Added ${st.id} to ${s.name}. Switch to that sprint to move it across the board.`; showSprint(); };
    d.appendChild(document.createElement('br')); d.appendChild(btn);
   }
   list.appendChild(d);
@@ -142,7 +149,7 @@ function addStory(){
  const title=document.getElementById('newTitle').value.trim();
  if(!title){ document.getElementById('addMsg').textContent='Add a story title first, in As a … , I want … , so that … form if you can.'; return; }
  const id='C'+(custom.length+1);
- custom.push({id, epic:document.getElementById('newEpic').value, title, points:parseInt(document.getElementById('newPoints').value), accept:'', sprint:'Custom — add to a sprint below'});
+ custom.push({id, epic:document.getElementById('newEpic').value, title, points:parseInt(document.getElementById('newPoints').value), accept:'', sprint:'Custom — add to a sprint below', custom:true});
  document.getElementById('newTitle').value='';
  document.getElementById('addMsg').textContent=`Added ${id} to the backlog. Use “Add to current sprint” on that card to put it on a board.`;
  renderBacklog();
@@ -163,7 +170,7 @@ function renderBoard(){
   const c=document.createElement('div'); c.className='col'; c.innerHTML=`<h3>${col}</h3>`;
   s.stories.filter(st=>state[s.id][st.id]===ci).forEach(st=>{
    const card=document.createElement('div'); card.className='card';
-   card.innerHTML=`<span class="tag">${st.id} · ${st.epic} · ${st.points} points</span><strong>${st.title}</strong><p>${st.accept||''}</p>`;
+   card.innerHTML=`<span class="tag">${esc(st.id)} · ${esc(st.epic)} · ${esc(st.points)} points</span><strong>${esc(st.title)}</strong><p>${esc(st.accept||'')}</p>`;
    const btn=document.createElement('button'); btn.className='small';
    btn.textContent= ci<3 ? 'Move forward →' : 'Done ✓ — move back';
    btn.onclick=()=>{ state[s.id][st.id]= ci<3 ? ci+1 : 0; renderBoard(); };
@@ -176,7 +183,7 @@ function renderBoard(){
  s.stories.forEach(st=>{ if(state[s.id][st.id]===3) rem-=st.points; remaining.push(rem); });
  const max=tot||1;
  remaining.forEach(v=>{ const d=document.createElement('div'); d.style.height=(v/max*100)+'%'; d.innerHTML=`<span>${v}</span>`; burn.appendChild(d); });
- document.getElementById('burnText').textContent=`Remaining work now: ${tot-done} points. Burndown starts at ${tot} and falls only when a story reaches Done.`;
+ document.getElementById('burnText').textContent=`Remaining work now: ${tot-done} points. The chart starts at ${tot} and falls only when a story reaches Done.`;
 }
 function resetSprint(){ SPRINTS.find(x=>x.id===current).stories.forEach(st=>{ state[current][st.id]=0; }); renderBoard(); }
 function renderRaid(){
